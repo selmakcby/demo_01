@@ -1,103 +1,185 @@
-import Image from "next/image";
+'use client';
+
+import React, { useState } from 'react';
+import { books, categories, featuredBooks, bestsellerBooks } from '@/lib/data';
+import { Book, BookCategory } from '@/lib/types';
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const filteredBooks = books.filter(book => {
+    const matchesCategory = selectedCategory === 'all' || book.genre.some(genre => 
+      categories.find(cat => cat.id === selectedCategory)?.name.toLowerCase().includes(genre.toLowerCase())
+    );
+    const matchesSearch = book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         book.author.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div className="flex items-center">
+              <h1 className="text-3xl font-bold text-gray-900">📚 BookStore</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search books..."
+                  value={searchQuery}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                  className="w-64 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+          </div>
         </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            Discover Your Next Favorite Book
+          </h2>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Explore our curated collection of books across all genres. From bestsellers to hidden gems, find your perfect read.
+          </p>
+        </div>
+
+        {/* Categories */}
+        <div className="mb-8">
+          <h3 className="text-2xl font-semibold text-gray-900 mb-4">Categories</h3>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => setSelectedCategory('all')}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                selectedCategory === 'all'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+              }`}
+            >
+              All Books
+            </button>
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  selectedCategory === category.id
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                {category.icon} {category.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Featured Books */}
+        <section className="mb-12">
+          <h3 className="text-2xl font-semibold text-gray-900 mb-6">⭐ Featured Books</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {featuredBooks.map((book) => (
+              <BookCard key={book.id} book={book} />
+            ))}
+          </div>
+        </section>
+
+        {/* Bestsellers */}
+        <section className="mb-12">
+          <h3 className="text-2xl font-semibold text-gray-900 mb-6">🏆 Bestsellers</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {bestsellerBooks.map((book) => (
+              <BookCard key={book.id} book={book} />
+            ))}
+          </div>
+        </section>
+
+        {/* All Books */}
+        <section>
+          <h3 className="text-2xl font-semibold text-gray-900 mb-6">
+            {selectedCategory === 'all' ? 'All Books' : `${categories.find(cat => cat.id === selectedCategory)?.name} Books`}
+            {searchQuery && ` (${filteredBooks.length} results)`}
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredBooks.map((book) => (
+              <BookCard key={book.id} book={book} />
+            ))}
+          </div>
+          {filteredBooks.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">No books found matching your criteria.</p>
+            </div>
+          )}
+        </section>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+    </div>
+  );
+}
+
+function BookCard({ book }: { book: Book }) {
+  return (
+    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden">
+      <div className="aspect-[2/3] relative">
+        <img
+          src={book.coverImage}
+          alt={book.title}
+          className="w-full h-full object-cover"
+        />
+        {book.featured && (
+          <div className="absolute top-2 left-2 bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+            Featured
+          </div>
+        )}
+        {book.bestseller && (
+          <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+            Bestseller
+          </div>
+        )}
+      </div>
+      <div className="p-4">
+        <h4 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2">{book.title}</h4>
+        <p className="text-gray-600 mb-2">{book.author}</p>
+        <div className="flex items-center mb-2">
+          <div className="flex text-yellow-400">
+            {[...Array(5)].map((_, i) => (
+              <span key={i} className={i < Math.floor(book.rating) ? 'text-yellow-400' : 'text-gray-300'}>
+                ★
+              </span>
+            ))}
+          </div>
+          <span className="ml-2 text-sm text-gray-600">{book.rating}</span>
+        </div>
+        <p className="text-sm text-gray-600 mb-3 line-clamp-2">{book.description}</p>
+        <div className="flex flex-wrap gap-1 mb-3">
+          {book.genre.slice(0, 2).map((genre, index) => (
+            <span
+              key={index}
+              className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+            >
+              {genre}
+            </span>
+          ))}
+          {book.genre.length > 2 && (
+            <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+              +{book.genre.length - 2}
+            </span>
+          )}
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-lg font-bold text-gray-900">${book.price}</span>
+          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+            Add to Cart
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
